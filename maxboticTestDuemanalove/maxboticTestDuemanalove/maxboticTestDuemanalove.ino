@@ -42,7 +42,6 @@ Larry Ryan Feb 2014 - modified Mar 2014
   int charsRead = 0;             // Controls the while loop and is initialized to zero
   int i;                                  // The integer version of the inches string
   
-  long TimeStamp = 0;
   
 // The serial connection to the Maxbotix TX pin:
 SoftwareSerial MaxbotixA(RXPinA, TXPinA, inverted);  
@@ -54,8 +53,8 @@ SoftwareSerial MaxbotixB(RXPinB, TXPinB, inverted);
 
 void setup()
 {
-  MaxbotixA.begin(MaxbotixBaud);
   MaxbotixB.begin(MaxbotixBaud);
+  MaxbotixA.begin(MaxbotixBaud);
   Serial.begin(38400);
   pinMode(RangePinA, OUTPUT);
   pinMode(RangePinB, OUTPUT);
@@ -65,16 +64,28 @@ void setup()
 
 void loop()
 {
-  digitalWrite(RangePinA, HIGH);  //turn on ranging to the first sensor
-  delayMicroseconds(50);    //hold pin high for > 20us to command ranging, see specs sheet
-  digitalWrite(RangePinA, LOW);
+ 
+ //digitalWrite(RangePinA, HIGH);  //turn on ranging to the first sensor
+ //digitalWrite(RangePinB, HIGH);  //turn on ranging to the first sensor
+
+  if(millis()%1000 < 500)
+  {  
+    digitalWrite(RangePinA, HIGH);  //turn on ranging to the first sensor
+    digitalWrite(RangePinB, LOW);
+    MaxbotixA.listen();
+    //Serial.println("A On");
+  }
+  else if(millis()%1000 > 500)
+  {
+    digitalWrite(RangePinB, HIGH);  //turn on ranging to the first sensor
+    digitalWrite(RangePinA, LOW);
+    MaxbotixB.listen();
+    //Serial.println("B On");
+  }
   
-  digitalWrite(RangePinB, HIGH);  //turn on ranging to the first sensor
-  delayMicroseconds(50);    //hold pin high for > 20us to command ranging, see specs sheet
-  digitalWrite(RangePinB, LOW);
   
   //READ SERIAL DATA FROM FIRST SENSOR//
- 
+   
   if (MaxbotixA.available() >= msgLength)   // Whole message received?
   {
     if (MaxbotixA.read() == startChar)     //See an R yet?
@@ -92,12 +103,13 @@ void loop()
        i=atoi(dist); // convert the inches characters to an integer
                      // Thank you Wade Hasbrouck for the help with atoi()
        Serial.print("Sensor A:  ");
-       Serial.print(i);
+       Serial.println(i);
  
     } 
   }
   
   //READ SERIAL DATA FROM SECOND SENSOR//
+  
   if (MaxbotixB.available() >= msgLength)   // Whole message received?
   {
     if (MaxbotixB.read() == startChar)     //See an R yet?
@@ -115,7 +127,7 @@ void loop()
        i=atoi(dist); // convert the inches characters to an integer
                      // Thank you Wade Hasbrouck for the help with atoi()
        Serial.print("Sensor B:  ");
-       Serial.print(i);
+       Serial.println(i);
  
     } 
   }
